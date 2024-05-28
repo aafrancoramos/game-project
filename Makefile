@@ -4,18 +4,18 @@ CXXFLAGS = -std=c++11 -Wall
 
 # Detect the OS
 ifeq ($(OS),Windows_NT)
-    CXXFLAGS += -I./sdl/include
+    CXXFLAGS += -I./sdl/include -I./headers
     LIBRARIES = -L./sdl/lib -lSDL2 -lSDL2_image
-    TARGET = game.exe
+    TARGET = build/game.exe
     RM = del
     COPYDLL = copy
     DLLS = sdl/lib/SDL2.dll sdl/lib/SDL2_image.dll
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CXXFLAGS += $(shell sdl2-config --cflags)
+        CXXFLAGS += $(shell sdl2-config --cflags) -I./headers
         LIBRARIES = $(shell sdl2-config --libs) -lSDL2_image
-        TARGET = game
+        TARGET = build/game
         RM = rm -f
         COPYDLL = cp
         DLLS = # No DLLs needed for macOS
@@ -24,9 +24,13 @@ else
     endif
 endif
 
+# Source and build directories
+SRCDIR = src
+BUILDDIR = build
+
 # Source files
-SRCS = $(wildcard src/*.cpp)
-OBJS = $(SRCS:.cpp=.o)
+SRCS = $(wildcard $(SRCDIR)/*.cpp)
+OBJS = $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SRCS))
 
 # Default rule to build the target
 all: $(TARGET)
@@ -36,17 +40,26 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	@echo "Linking..."
 	$(CC) $(OBJS) $(LIBRARIES) -o $@
+ifeq ($(OS),Windows_NT)
 	@echo "Copying DLLs..."
-	$(COPYDLL) $(DLLS) .
+	$(COPYDLL) $(DLLS) $(BUILDDIR)
+endif
 
 # Rule to compile the source files into object files
-%.o: %.cpp
-	$(CC) $(CXXFLAGS) -c $< -o $@
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR)
+	@echo "Compiling $<..."
+	$(CC) $(CXXFLAGS) -c $< -o $@ -I./headers
+
+# Create the build directory if it doesn't exist
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
 
 # Rule to clean up the build artifacts
 clean:
+	@echo "Cleaning up..."
 	$(RM) $(TARGET) $(OBJS)
 
 # Rule to run the program
 run: $(TARGET)
+	@echo "Running $(TARGET)..."
 	./$(TARGET)
