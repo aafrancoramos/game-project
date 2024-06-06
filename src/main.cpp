@@ -4,8 +4,8 @@
 #include "../headers/game.h"
 
 int main(int argc, char* argv[]) {
-    game g;
-    g.gameLoop();
+    Game g;
+    g.run();
     
     return 0;
 }

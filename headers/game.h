@@ -1,20 +1,32 @@
+#ifndef GAME_H
+#define GAME_H
+
 #include <SDL2/SDL.h>
+#include "entity.h"
 
-class game {
-    public:
-        game();
+class Game {
+public:
+    Game();
+    ~Game();
+    void run();
 
-        ~game();
+private:
+    void processInput();
+    
+    void update(float deltaTime);
+    
+    void render();
 
-        void gameLoop();
+    SDL_Window* window;
+    SDL_Renderer* renderer;
 
-    private:
-        const int SCREEN_WIDTH = 300;
-        const int SCREEN_HEIGHT = 300;
+    bool isRunning;
+    
+    Uint32 lastTicks;
+    Entity player;
 
-        SDL_Window* window;
-        SDL_Renderer* renderer;
-        SDL_Event e;
-
-        bool loop;
+    static const int SCREEN_WIDTH = 800;
+    static const int SCREEN_HEIGHT = 600;
 };
+
+#endif
